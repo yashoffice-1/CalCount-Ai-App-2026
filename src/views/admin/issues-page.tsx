@@ -24,6 +24,9 @@ import {
   Layers,
   Globe,
   Terminal,
+  Plus,
+  ArrowRight,
+  Sparkles,
 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -123,17 +126,11 @@ function formatCompact(n: number): string {
 }
 
 /* ─── Assignee avatar ─── */
-function AssigneeAvatar({ initials, name }: { initials?: string, name: string }) {
-  if (!initials) {
-    return (
-      <div className="sentry-avatar-empty" title="Unassigned">
-        <Users className="h-3 w-3" />
-      </div>
-    )
-  }
+function AssigneeAvatar({ initials, name, size = 'sm' }: { initials?: string; name?: string, size?: 'xs' | 'sm' }) {
+  const sizeClass = size === 'xs' ? 'h-5 w-5 text-[10px]' : 'h-6 w-6 text-xs';
   return (
-    <div className="sentry-avatar" title={name}>
-      {initials}
+    <div className={`${sizeClass} rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 border border-indigo-200 shrink-0`} title={name}>
+      {initials || '?'}
     </div>
   )
 }
@@ -158,6 +155,9 @@ export function IssuesPage() {
   const [statusFilter, setStatusFilter] = React.useState<'all' | IssueStatus>('all')
   const [levelFilter, setLevelFilter] = React.useState<'all' | IssueLevel>('all')
   const [sortBy, setSortBy] = React.useState<'lastSeen' | 'events' | 'users' | 'firstSeen'>('lastSeen')
+
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => { setMounted(true) }, [])
 
   const selected = selectedId ? rows.find((r) => r.id === selectedId) ?? null : null
 
@@ -239,8 +239,10 @@ export function IssuesPage() {
   const totalEvents = rows.reduce((a, r) => a + r.events, 0)
   const unresolvedCount = rows.filter((r) => r.status !== 'Resolved').length
 
+  if (!mounted) return <div className="sentry-page" />
+
   return (
-    <div className="sentry-page">
+    <div className="sentry-page" suppressHydrationWarning>
       {/* ── Header ── */}
       <div className="sentry-page-header">
         <div className="sentry-page-header-left">
@@ -317,6 +319,7 @@ export function IssuesPage() {
             Clear
           </button>
         </div>
+        
       )}
 
       {/* ── Issue list ── */}
@@ -446,7 +449,7 @@ export function IssuesPage() {
 
               {/* Assignee */}
               <div className="sentry-issue-assign-col">
-                <AssigneeAvatar initials={row.assigneeAvatar} name={row.assignedTo} />
+                <AssigneeAvatar initials={row.assigneeAvatar} name={row.assignedTo} size="sm" />
               </div>
             </div>
           ))
@@ -461,16 +464,20 @@ export function IssuesPage() {
       {/* ── Detail dialog ── */}
       <Dialog open={!!selectedId} onOpenChange={(o) => !o && setSelectedId(null)}>
         <DialogContent className="max-h-[min(90vh,800px)] max-w-3xl overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="pr-8 text-base flex items-center gap-2">
-              {selected && levelIcon(selected.level)}
-              <span>{selected?.title ?? 'Issue'}</span>
-            </DialogTitle>
-            <DialogDescription>
-              {selected
-                ? `${selected.shortId} · ${selected.platform} · ${selected.source}`
-                : ''}
-            </DialogDescription>
+          <DialogHeader className="pb-2 border-b border-[hsl(var(--border))]">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <DialogTitle className="text-xl font-bold flex items-center gap-2 leading-tight">
+                  {selected && levelIcon(selected.level)}
+                  <span>{selected?.title ?? 'Issue'}</span>
+                </DialogTitle>
+                <div className="flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]">
+                   <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded text-[11px] font-bold text-gray-600">{selected?.shortId}</span>
+                   <span>•</span>
+                   <span className="font-medium text-indigo-600">{selected?.culprit}</span>
+                </div>
+              </div>
+            </div>
           </DialogHeader>
 
           {selected ? (
@@ -491,6 +498,27 @@ export function IssuesPage() {
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
+
+                  <div className="h-4 w-px bg-[hsl(var(--border))] mx-1" />
+
+                  <div className="flex items-center gap-2 px-2 py-1 rounded border border-[hsl(var(--border))] bg-[hsl(var(--muted-background))]">
+                     <AssigneeAvatar initials={selected.assigneeAvatar} name={selected.assignedTo} size="xs" />
+                     <select 
+                       className="bg-transparent border-none text-xs font-medium focus:ring-0 cursor-pointer outline-none"
+                       value={selected.assignedTo || ''}
+                       onChange={(e) => {
+                         const val = e.target.value;
+                         setRows(prev => prev.map(r => r.id === selected.id ? { ...r, assignedTo: val, assigneeAvatar: val.split(' ').map(n=>n[0]).join('') } : r));
+                         toast.success(`Assigned to ${val}`);
+                       }}
+                     >
+                        <option value="">Unassigned</option>
+                        <option value="Sara Kim">Sara Kim</option>
+                        <option value="Dev Chen">Dev Chen</option>
+                        <option value="Mike Jordan">Mike Jordan</option>
+                        <option value="Priya Shah">Priya Shah</option>
+                     </select>
+                  </div>
                 </div>
 
                 <div className="sentry-detail-meta-pills">
@@ -583,6 +611,32 @@ export function IssuesPage() {
               <div className="sentry-detail-section">
                 <h4 className="sentry-detail-section-title">Reproduction Steps</h4>
                 <p className="sentry-detail-text">{selected.reproduction}</p>
+              </div>
+
+              {/* AI Insight */}
+              <div className="mt-6 p-4 rounded-xl bg-indigo-50/50 border border-indigo-100 flex gap-4">
+                <div className="h-10 w-10 rounded-lg bg-white shadow-sm flex items-center justify-center border border-indigo-200">
+                   <Sparkles className="h-5 w-5 text-indigo-600" />
+                </div>
+                <div>
+                   <h4 className="text-sm font-bold text-indigo-900 flex items-center gap-2">
+                     AI Assignment Engine
+                     <Badge className="bg-indigo-600 text-[10px] h-4">Beta</Badge>
+                   </h4>
+                   <p className="text-xs text-indigo-700 mt-1 leading-relaxed">
+                     Based on the culprit <span className="font-semibold">{selected.culprit}</span> and stack trace, 
+                     this issue matches previous fixes by <span className="underline font-medium">Dev Chen</span>.
+                   </p>
+                   <button 
+                     onClick={() => {
+                        setRows(prev => prev.map(r => r.id === selected.id ? { ...r, assignedTo: 'Dev Chen', assigneeAvatar: 'DC' } : r));
+                        toast.success('Assigned to Dev Chen via AI Insight');
+                     }}
+                     className="mt-3 text-[11px] font-bold text-indigo-700 hover:bg-indigo-100 px-3 py-1 rounded-full border border-indigo-200 transition-colors uppercase tracking-wider"
+                   >
+                     Assign to Dev Chen
+                   </button>
+                </div>
               </div>
             </div>
           ) : null}

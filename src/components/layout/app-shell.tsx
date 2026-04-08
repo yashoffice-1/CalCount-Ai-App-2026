@@ -16,7 +16,7 @@ export function AppShell({
   const [mobileOpen, setMobileOpen] = React.useState(false)
 
   return (
-    <div className="min-h-screen flex bg-transparent">
+    <div className="min-h-screen flex bg-transparent" suppressHydrationWarning>
       {/* ── Sticky sidebar (desktop) ── */}
       <aside className="hidden lg:flex lg:flex-col w-[260px] shrink-0 sticky top-0 h-screen border-r border-[hsl(var(--border))] bg-white/75 dark:bg-black/25 backdrop-blur z-20">
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 sidebar-scroll">

@@ -63,10 +63,10 @@ export function LoginPage() {
   }
 
   return (
-    <Card className="border border-[hsl(var(--border))]/80 bg-white/75 shadow-glow backdrop-blur-xl dark:bg-black/45 dark:shadow-black/40 rounded-2xl">
+    <Card className="border border-[hsl(var(--border))]/80 bg-white/75 shadow-glow backdrop-blur-xl dark:bg-black/45 dark:shadow-black/40 rounded-2xl" suppressHydrationWarning>
       <CardHeader className="space-y-3 pb-4">
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[hsl(var(--accent))] text-sm font-bold text-white shadow-lg shadow-[hsl(var(--accent))]/30">
-          C
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-[hsl(var(--border))] overflow-hidden shadow-lg bg-white">
+          <img src="/brand-logo.jpg" alt="Logo" className="h-full w-full object-cover" />
         </div>
         <div className="space-y-1">
           <CardTitle className="text-2xl font-semibold tracking-tight">Sign in</CardTitle>

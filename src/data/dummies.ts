@@ -9,15 +9,31 @@ export type ApiRow = {
   lastUsedISO: string
 }
 
-export type TicketStatus = 'Open' | 'In Progress' | 'Closed'
+export type TicketStatus = 'Open' | 'Assigned' | 'In Progress' | 'Escalated' | 'Resolved' | 'Closed'
+export type TicketCategory = 'API' | 'Billing' | 'Server' | 'Other'
+export type TicketPriority = 'Low' | 'Medium' | 'High'
 
 export type TicketRow = {
   id: string
-  user: string
-  issue: string
+  title: string
+  description: string
+  category: TicketCategory
+  priority: TicketPriority
   status: TicketStatus
-  assignedTo: string
-  lastUpdatedISO: string
+  user: string
+  assignedTo: string | null
+  attachments: string[]
+  createdAtISO: string
+  updatedAtISO: string
+  slaHours: number
+}
+
+export type TicketComment = {
+  id: string
+  ticketId: string
+  sender: 'user' | 'agent'
+  message: string
+  createdAtISO: string
 }
 
 export type IssueSeverity = 'Low' | 'Medium' | 'High' | 'Critical'
@@ -314,6 +330,9 @@ export type UserRow = {
   plan: 'Free' | 'Pro' | 'Enterprise'
   activity: string
   suspended?: boolean
+  ticket: string
+  joinedAt: string
+  roleId?: string
 }
 
 export const dashboardKpis = {
@@ -424,28 +443,79 @@ export const newApis: ApiRow[] = [
 export const ticketRows: TicketRow[] = [
   {
     id: 'TCK-1042',
-    user: 'mike@northwind.ai',
-    issue: 'Webhook retries failing (400)',
+    title: 'Webhook retries failing (400)',
+    description: 'We are receiving 400 Bad Request errors when our system tries to interact with your webhook endpoint.',
+    category: 'API',
+    priority: 'High',
     status: 'In Progress',
-    assignedTo: 'Sara',
-    lastUpdatedISO: new Date(Date.now() - 1000 * 60 * 16).toISOString(),
+    user: 'mike@northwind.ai',
+    assignedTo: 'Sara Kim',
+    attachments: [],
+    createdAtISO: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    updatedAtISO: new Date(Date.now() - 1000 * 60 * 16).toISOString(),
+    slaHours: 24,
   },
   {
     id: 'TCK-1041',
+    title: 'API keys rotation request',
+    description: 'I lost my main API key and need to rotate it immediately to prevent unauthorized access.',
+    category: 'Other',
+    priority: 'Critical' as any, // fallback to high
+    status: 'Escalated',
     user: 'sara@aurora.ai',
-    issue: 'API keys rotation request',
-    status: 'Open',
-    assignedTo: 'Dev',
-    lastUpdatedISO: new Date(Date.now() - 1000 * 60 * 38).toISOString(),
+    assignedTo: 'Admin Team',
+    attachments: [],
+    createdAtISO: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
+    updatedAtISO: new Date(Date.now() - 1000 * 60 * 38).toISOString(),
+    slaHours: 12,
   },
   {
     id: 'TCK-1039',
-    user: 'alex@northwind.ai',
-    issue: 'Billing mismatch on monthly plan',
+    title: 'Billing mismatch on monthly plan',
+    description: 'I was charged twice for the monthly plan this cycle. Attached is the receipt.',
+    category: 'Billing',
+    priority: 'Medium',
     status: 'Closed',
-    assignedTo: 'Priya',
-    lastUpdatedISO: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
+    user: 'alex@northwind.ai',
+    assignedTo: 'Priya Shah',
+    attachments: ['receipt.pdf'],
+    createdAtISO: new Date(Date.now() - 1000 * 60 * 60 * 240).toISOString(),
+    updatedAtISO: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
+    slaHours: 48,
   },
+  {
+    id: 'TCK-1043',
+    title: 'Server downtime alert in EU-West',
+    description: 'Instances are taking 5+ minutes to boot in the EU-West region since the morning.',
+    category: 'Server',
+    priority: 'High',
+    status: 'Open',
+    user: 'jason@example.com',
+    assignedTo: null,
+    attachments: [],
+    createdAtISO: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+    updatedAtISO: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+    slaHours: 6,
+  },
+  {
+    id: 'TCK-1044',
+    title: 'How to integrate with Python SDK?',
+    description: 'Looking for a simple code snippet on how to authenticate using the Python SDK.',
+    category: 'API',
+    priority: 'Low',
+    status: 'Assigned',
+    user: 'emily@startup.io',
+    assignedTo: 'Dev Chen',
+    attachments: [],
+    createdAtISO: new Date(Date.now() - 1000 * 60 * 60 * 1).toISOString(),
+    updatedAtISO: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    slaHours: 72,
+  }
+]
+
+export const ticketComments: TicketComment[] = [
+  { id: 'c1', ticketId: 'TCK-1042', sender: 'user', message: 'Hello, the 400 errors are still happening.', createdAtISO: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString() },
+  { id: 'c2', ticketId: 'TCK-1042', sender: 'agent', message: 'I am checking the logs right now. It seems your payload is missing the signature field.', createdAtISO: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
 ]
 
 export const revenueFilters = ['Daily', 'Weekly', 'Monthly'] as const
@@ -622,10 +692,14 @@ export const userPattern = {
 }
 
 export const usersRows: UserRow[] = [
-  { id: 'usr_1', name: 'Mike Jordan', email: 'mike@northwind.ai', plan: 'Enterprise', activity: 'Last seen 2h ago' },
-  { id: 'usr_2', name: 'Sara Kim', email: 'sara@aurora.ai', plan: 'Pro', activity: 'Last seen yesterday' },
-  { id: 'usr_3', name: 'Alex Chen', email: 'alex@northwind.ai', plan: 'Free', activity: 'No activity 9d' },
-  { id: 'usr_4', name: 'Priya Shah', email: 'priya@aurora.ai', plan: 'Enterprise', activity: 'API calls 1,240/day', suspended: false },
+  { id: 'usr_1', name: 'Mike Jordan', email: 'mike@northwind.ai', plan: 'Enterprise', activity: 'Last seen 2h ago', ticket: '3 Active', roleId: 'role_admin', joinedAt: '2023-11-12' },
+  { id: 'usr_2', name: 'Sara Kim', email: 'sara@aurora.ai', plan: 'Pro', activity: 'Last seen yesterday', ticket: 'None', roleId: 'role_support', joinedAt: '2024-01-05' },
+  { id: 'usr_3', name: 'Alex Chen', email: 'alex@northwind.ai', plan: 'Free', activity: 'No activity 9d', ticket: '1 Closed', roleId: 'role_viewer', joinedAt: '2023-08-20' },
+  { id: 'usr_4', name: 'Priya Shah', email: 'priya@aurora.ai', plan: 'Enterprise', activity: 'API calls 1,240/day', suspended: false, ticket: 'None', roleId: 'role_super', joinedAt: '2024-03-15' },
+  { id: 'usr_5', name: 'David Wilson', email: 'david@vertex.co', plan: 'Pro', activity: 'Last seen 5m ago', ticket: 'None', roleId: 'role_viewer', joinedAt: '2024-02-10' },
+  { id: 'usr_6', name: 'Emma Larson', email: 'emma@pixel.com', plan: 'Free', activity: 'Last seen 3d ago', suspended: true, ticket: '2 Closed', roleId: 'role_viewer', joinedAt: '2023-12-01' },
+  { id: 'usr_7', name: 'Marcus Aurelius', email: 'marcus@legacy.org', plan: 'Enterprise', activity: 'Last seen 12h ago', ticket: '1 Active', roleId: 'role_admin', joinedAt: '2024-03-22' },
+  { id: 'usr_8', name: 'Sofia Rodriguez', email: 'sofia@cloud.net', plan: 'Pro', activity: 'Last seen 1w ago', suspended: true, ticket: 'None', roleId: 'role_support', joinedAt: '2023-10-18' },
 ]
 
 export type AdminSubRole = 'Admin' | 'Support' | 'Viewer'
@@ -725,7 +799,67 @@ export const auditLogs: AuditRow[] = Array.from({ length: 14 }).map((_, idx) => 
     actor,
     action,
     resource,
-    detail: details[idx % details.length],
   }
 })
+
+export type ApiMonitorCard = {
+  title: string
+  count: number
+  peak: string
+  color: string
+  letter: string
+  requests?: { timestamp: string; userId: string; method: string; duration: string }[]
+}
+
+export const monitorCards: ApiMonitorCard[] = [
+  { 
+    title: 'Dashboard', 
+    count: 72, 
+    peak: '02:59', 
+    color: '#3b82f6', // blue-500
+    letter: 'D',
+    requests: Array.from({ length: 72 }).map((_, i) => ({
+      timestamp: `08/04/2026, 02:59:${(56 - i % 10).toString().padStart(2, '0')}`,
+      userId: '91184',
+      method: 'POST',
+      duration: `${Math.floor(Math.random() * 5) + 2}ms`
+    }))
+  },
+  { title: 'Meal Add', count: 8, peak: '00:38', color: '#22c55e', letter: 'A' },
+  { title: 'Meal Regenerate', count: 5, peak: '00:13', color: '#eab308', letter: 'R' },
+  { title: 'Meal Barcode', count: 2, peak: '05:03', color: '#ef4444', letter: 'B' },
+]
+
+export const monitorStats = {
+  requests: 11822,
+  avgLatency: '465ms',
+  maxLatency: '14603ms',
+  uniqueUsers: 468,
+}
+
+export type ActivityLogRow = {
+  id: string
+  timestamp: string
+  userId: string
+  method: string
+  endpoint: string
+  duration: number
+}
+
+export const activityLogs: ActivityLogRow[] = [
+  { id: 'l1', timestamp: '08/04/2026, 09:29:34', userId: 'Guest', method: 'GET', endpoint: '/app-version?version_id=0', duration: 1 },
+  { id: 'l2', timestamp: '08/04/2026, 09:29:30', userId: 'Guest', method: 'GET', endpoint: '/app-version?version_id=0', duration: 1 },
+  { id: 'l3', timestamp: '08/04/2026, 09:29:30', userId: 'Guest', method: 'POST', endpoint: '/dashboard', duration: 1 },
+  { id: 'l4', timestamp: '08/04/2026, 09:29:12', userId: '110246', method: 'POST', endpoint: '/meal/overview', duration: 728 },
+  { id: 'l5', timestamp: '08/04/2026, 09:29:01', userId: 'Guest', method: 'GET', endpoint: '/app-version?version_id=0', duration: 1 },
+  { id: 'l6', timestamp: '08/04/2026, 09:29:01', userId: '110246', method: 'POST', endpoint: '/dashboard', duration: 3 },
+  { id: 'l7', timestamp: '08/04/2026, 09:29:00', userId: 'Guest', method: 'GET', endpoint: '/app-version?version_id=0', duration: 2 },
+  { id: 'l8', timestamp: '08/04/2026, 09:29:00', userId: '110472', method: 'POST', endpoint: '/dashboard', duration: 3 },
+  { id: 'l9', timestamp: '08/04/2026, 09:29:00', userId: '110246', method: 'POST', endpoint: '/meal/overview', duration: 717 },
+  { id: 'l10', timestamp: '08/04/2026, 09:28:58', userId: 'Guest', method: 'GET', endpoint: '/videos/%D7%91%D7%95%D7%9B%D7%95%D7%AA%D7%9B%D7%... ', duration: 123 },
+  { id: 'l11', timestamp: '08/04/2026, 09:28:58', userId: 'Guest', method: 'GET', endpoint: '/videos/v14044g50000d2sqtdfoq65v97hn1vsg.MP4', duration: 19 },
+  { id: 'l12', timestamp: '08/04/2026, 09:28:58', userId: 'Guest', method: 'GET', endpoint: '/videos/%D7%91%D7%95%D7%9B%D7%95%D7%AA%D7%9B%D7%... ', duration: 110 },
+  { id: 'l13', timestamp: '08/04/2026, 09:28:58', userId: 'Guest', method: 'GET', endpoint: '/videos/v14044g50000d2sqtdfoq65v97hn1vsg.MP4', duration: 25 },
+  { id: 'l14', timestamp: '08/04/2026, 09:28:58', userId: 'Guest', method: 'GET', endpoint: '/videos/%D7%91%D7%95%D7%9B%D7%95%D7%AA%D7%9B%D7%... ', duration: 1 },
+]
 

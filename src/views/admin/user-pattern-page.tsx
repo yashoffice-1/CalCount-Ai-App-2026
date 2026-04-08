@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { userPattern } from '@/data/dummies'
 import { LineChartCard, BarChartCard } from '@/components/charts/lazy-charts'
 import {
@@ -340,9 +340,16 @@ function KpiPill({
 export function UserPatternPage() {
   const [dateRange, setDateRange] = useState<DateRange>('Last 30 days')
   const [isEditing, setIsEditing] = useState(false)
+  
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return <div className="min-h-screen p-6" suppressHydrationWarning />
 
   return (
-    <div className="posthog-dashboard">
+    <div className="posthog-dashboard" suppressHydrationWarning>
       {/* ── Header bar ── */}
       <div className="posthog-header">
         <div className="posthog-header-left">

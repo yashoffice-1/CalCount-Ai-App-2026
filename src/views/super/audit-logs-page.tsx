@@ -49,9 +49,21 @@ export function AuditLogsPage() {
     })
     toast.success('Exported audit logs', { description: `${filtered.length} rows` })
   }
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen p-6 flex items-center justify-center" suppressHydrationWarning>
+        <div className="text-gray-500 text-sm">Loading audit logs...</div>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" suppressHydrationWarning>
       <PageHeading
         title="Audit Logs"
         subtitle="Track admin actions, role changes, API changes, and system updates."

@@ -26,8 +26,8 @@ export default function HomePage() {
   }, [user, router])
 
   return (
-    <div className="flex min-h-svh items-center justify-center">
-      <div className="h-9 w-9 animate-spin rounded-full border-2 border-[hsl(var(--accent))] border-t-transparent" />
+    <div className="flex min-h-svh items-center justify-center" suppressHydrationWarning>
+      <div className="h-9 w-9 animate-spin rounded-full border-2 border-[hsl(var(--accent))] border-t-transparent" suppressHydrationWarning />
     </div>
   )
 }

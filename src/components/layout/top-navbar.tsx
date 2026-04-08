@@ -55,17 +55,6 @@ export function TopNavbar({
           >
             <Menu className="h-4 w-4" />
           </button>
-          <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(var(--accent))] text-white shadow-soft">
-              C
-            </span>
-            <div className="hidden sm:block">
-              <div className="text-sm leading-none">CalCount Admin</div>
-              <div className="text-xs text-[hsl(var(--muted))]">
-                {panel === 'super' ? 'Super Admin' : 'Admin'} console
-              </div>
-            </div>
-          </Link>
         </div>
 
         <div className="hidden flex-1 items-center justify-center lg:flex">

@@ -10,27 +10,57 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { usersRows, type UserRow } from '@/data/dummies'
 
 export function UserDetailsPage() {
   const [search, setSearch] = React.useState('')
   const [rows, setRows] = React.useState<UserRow[]>(usersRows)
-  const [selected, setSelected] = React.useState<UserRow | null>(null)
+  const [planFilter, setPlanFilter] = React.useState('All')
+  const [ticketFilter, setTicketFilter] = React.useState('All')
+  const [statusFilter, setStatusFilter] = React.useState('All')
+
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
 
   const filtered = React.useMemo(() => {
-    const q = search.trim().toLowerCase()
-    if (!q) return rows
-    return rows.filter((r) => `${r.name} ${r.email} ${r.plan} ${r.activity}`.toLowerCase().includes(q))
-  }, [rows, search])
+    return rows.filter((r) => {
+      // 1. Search Query
+      const q = search.trim().toLowerCase()
+      const matchesSearch = !q || `${r.name} ${r.email} ${r.plan} ${r.ticket}`.toLowerCase().includes(q)
+      
+      // 2. Plan Filter
+      const matchesPlan = planFilter === 'All' || r.plan === planFilter
 
-  function suspendUser(user: UserRow) {
-    setRows((prev) => prev.map((u) => (u.id === user.id ? { ...u, suspended: !u.suspended } : u)))
-    toast.success(user.suspended ? 'User unsuspended' : 'User suspended', { description: user.email })
+      // 3. Ticket Filter
+      let matchesTicket = true
+      if (ticketFilter === 'Active') matchesTicket = r.ticket.includes('Active') || r.ticket.includes('Open')
+      if (ticketFilter === 'Closed') matchesTicket = r.ticket.includes('Closed')
+      if (ticketFilter === 'None') matchesTicket = r.ticket === 'None'
+
+      // 4. Status Filter
+      let matchesStatus = true
+      if (statusFilter === 'Active') matchesStatus = !r.suspended
+      if (statusFilter === 'Disabled') matchesStatus = !!r.suspended
+      
+      return matchesSearch && matchesPlan && matchesTicket && matchesStatus
+    })
+  }, [rows, search, planFilter, ticketFilter, statusFilter])
+
+
+
+  function suspendUser(userId: string) {
+    setRows((prev) => prev.map((u) => (u.id === userId ? { ...u, suspended: !u.suspended } : u)))
   }
 
+  function assignRole(userId: string, newRoleId: string) {
+    setRows((prev) => prev.map((u) => (u.id === userId ? { ...u, roleId: newRoleId } : u)))
+    toast.success('Role updated successfully', { description: `User role changed to ${newRoleId}` })
+  }
+
+  if (!mounted) return <div className="min-h-screen" suppressHydrationWarning />
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" suppressHydrationWarning>
       <PageHeading
         title="User Details"
         subtitle="Inspect users and apply suspension actions."
@@ -42,8 +72,47 @@ export function UserDetailsPage() {
           <div className="text-xs text-[hsl(var(--muted))]">Dummy data table with search.</div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="w-full sm:max-w-[360px]">
-            <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search users…" />
+          <div className="flex flex-col sm:flex-row items-center gap-4 w-full">
+            <Input 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)} 
+              placeholder="Search users…" 
+              className="w-full sm:max-w-[300px]" 
+            />
+            
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <select 
+                value={planFilter}
+                onChange={(e) => setPlanFilter(e.target.value)}
+                className="flex h-10 w-full sm:w-auto items-center justify-between rounded-md border border-[hsl(var(--border))] bg-white/50 px-3 py-2 text-sm text-[hsl(var(--muted-foreground))] dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+              >
+                <option value="All">All Plans</option>
+                <option value="Free">Free</option>
+                <option value="Pro">Pro</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
+
+              <select 
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="flex h-10 w-full sm:w-auto items-center justify-between rounded-md border border-[hsl(var(--border))] bg-white/50 px-3 py-2 text-sm text-[hsl(var(--muted-foreground))] dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+              >
+                <option value="All">All Status</option>
+                <option value="Active">Active Only</option>
+                <option value="Disabled">Disabled Only</option>
+              </select>
+
+              <select 
+                value={ticketFilter}
+                onChange={(e) => setTicketFilter(e.target.value)}
+                className="flex h-10 w-full sm:w-auto items-center justify-between rounded-md border border-[hsl(var(--border))] bg-white/50 px-3 py-2 text-sm text-[hsl(var(--muted-foreground))] dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-[hsl(var(--ring))]"
+              >
+                <option value="All">All Tickets</option>
+                <option value="Active">Active</option>
+                <option value="Closed">Closed</option>
+                <option value="None">None</option>
+              </select>
+            </div>
           </div>
 
           <Table>
@@ -51,49 +120,43 @@ export function UserDetailsPage() {
               <TableRow>
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Ticket</TableHead>
                 <TableHead>Plan</TableHead>
-                <TableHead>Activity</TableHead>
-                <TableHead className="w-[240px]">Actions</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Join Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="py-10 text-center text-[hsl(var(--muted))]">
+                  <TableCell colSpan={6} className="py-10 text-center text-[hsl(var(--muted))]">
                     No users found.
                   </TableCell>
                 </TableRow>
               ) : (
                 filtered.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-medium">{row.name}</TableCell>
-                    <TableCell className="text-[hsl(var(--muted))]">{row.email}</TableCell>
+                  <TableRow key={row.id} className="hover:bg-gray-50/50 transition-colors">
+                    <TableCell className="font-medium text-[hsl(var(--foreground))]">{row.name}</TableCell>
+                    <TableCell className="text-[hsl(var(--muted-foreground))]">{row.email}</TableCell>
                     <TableCell>
-                      <Badge variant={row.plan === 'Enterprise' ? 'info' : row.plan === 'Pro' ? 'secondary' : 'warning' as any}>
+                      <Badge variant={row.ticket === 'None' ? 'secondary' : row.ticket.includes('Active') ? 'warning' : 'outline' as any}>
+                        {row.ticket}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={row.plan === 'Enterprise' ? 'info' : row.plan === 'Pro' ? 'secondary' : 'default'} className={row.plan === 'Free' ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 border-gray-200 shadow-none' : 'shadow-sm'}>
                         {row.plan}
                       </Badge>
-                      {row.suspended ? (
-                        <div className="mt-2">
-                          <Badge variant="danger">Suspended</Badge>
-                        </div>
-                      ) : null}
                     </TableCell>
-                    <TableCell className="text-[hsl(var(--muted))]">{row.activity}</TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" onClick={() => setSelected(row)}>
-                          <UserRound className="h-4 w-4" />
-                          View profile
-                        </Button>
-                        <Button
-                          variant={row.suspended ? 'secondary' : 'destructive'}
-                          size="sm"
-                          onClick={() => suspendUser(row)}
-                        >
-                          <Ban className="h-4 w-4" />
-                          {row.suspended ? 'Unsuspend' : 'Suspend user'}
-                        </Button>
-                      </div>
+                      {!row.suspended ? (
+                        <Badge variant="success" className="bg-emerald-50 text-emerald-700 border-emerald-200">Active</Badge>
+                      ) : (
+                        <Badge variant="danger" className="bg-red-50 text-red-700 border-red-200">Disabled</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs font-medium text-gray-500">
+                      {row.joinedAt}
                     </TableCell>
                   </TableRow>
                 ))
@@ -103,40 +166,7 @@ export function UserDetailsPage() {
         </CardContent>
       </Card>
 
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Profile</DialogTitle>
-            <DialogDescription>
-              {selected ? `${selected.name} • ${selected.email}` : ''}
-            </DialogDescription>
-          </DialogHeader>
 
-          {selected ? (
-            <div className="mt-3 space-y-3 text-sm">
-              <div className="rounded-xl border border-[hsl(var(--border))] bg-white/50 dark:bg-black/20 p-3">
-                <div className="text-xs text-[hsl(var(--muted))]">Plan</div>
-                <div className="mt-1 font-medium">{selected.plan}</div>
-              </div>
-              <div className="rounded-xl border border-[hsl(var(--border))] bg-white/50 dark:bg-black/20 p-3">
-                <div className="text-xs text-[hsl(var(--muted))]">Activity</div>
-                <div className="mt-1 font-medium">{selected.activity}</div>
-              </div>
-              {selected.suspended ? (
-                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3">
-                  <div className="text-sm font-semibold text-red-700 dark:text-red-300">
-                    This user is currently suspended.
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          ) : null}
-
-          <DialogFooter>
-            <Button onClick={() => setSelected(null)}>Done</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   )
 }

@@ -8,7 +8,7 @@ export function Table({
   ...props
 }: React.TableHTMLAttributes<HTMLTableElement>) {
   return (
-    <div className={cn('w-full overflow-auto rounded-xl border', className)}>
+    <div className={cn('w-full overflow-auto rounded-xl border', className)} suppressHydrationWarning>
       <table className="w-full caption-bottom text-sm" {...props}>
         {children}
       </table>

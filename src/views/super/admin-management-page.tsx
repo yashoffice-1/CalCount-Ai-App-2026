@@ -36,9 +36,22 @@ export function AdminManagementPage() {
 
   const confirmUser = React.useMemo(() => pendingAdmins.find((u) => u.id === selectedId) ?? null, [pendingAdmins, selectedId])
 
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen p-6 flex items-center justify-center" suppressHydrationWarning>
+        <div className="text-gray-500 text-sm">Loading admin data...</div>
+      </div>
+    )
+  }
+
   const pending = pendingAdmins
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" suppressHydrationWarning>
       <PageHeading
         title="Admin Management"
         subtitle="Approve or reject new admin requests."

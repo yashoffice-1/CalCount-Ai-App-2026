@@ -15,9 +15,22 @@ export function SystemControlPage() {
     tickets: true,
   })
   const [maintenanceMode, setMaintenanceMode] = React.useState(false)
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen p-6 flex flex-col gap-4" suppressHydrationWarning>
+         <div className="h-10 w-48 bg-gray-100 animate-pulse rounded-lg" />
+         <div className="h-64 bg-gray-50 animate-pulse rounded-2xl" />
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" suppressHydrationWarning>
       <PageHeading
         title="System Control"
         subtitle="Super Admin full access switches and operational controls."

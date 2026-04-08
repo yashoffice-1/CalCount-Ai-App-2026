@@ -8,8 +8,8 @@
   --foreground: 222.2 84% 4.9%;
   --muted: 215 16% 46%;
   --border: 215 16% 88%;
-  --accent: 211 95% 52%;
-  --ring: 211 95% 52%;
+  --accent: 142 76% 36%;
+  --ring: 142 76% 36%;
   color-scheme: light;
 }
 
@@ -18,8 +18,8 @@
   --foreground: 210 40% 98%;
   --muted: 217 18% 60%;
   --border: 217 23% 20%;
-  --accent: 211 95% 62%;
-  --ring: 211 95% 62%;
+  --accent: 142 72% 45%;
+  --ring: 142 72% 45%;
   color-scheme: dark;
 }
 
@@ -168,14 +168,14 @@ body {
 }
 
 .posthog-btn.primary {
-  background: #1d4ed8;
+  background: #15803d;
   color: #fff;
-  border-color: #1d4ed8;
+  border-color: #15803d;
   box-shadow: 0 1px 3px rgba(29, 78, 216, 0.3);
 }
 
 .posthog-btn.primary:hover {
-  background: #1e40af;
+  background: #166534;
 }
 
 .posthog-btn.secondary {
@@ -696,7 +696,7 @@ body {
 
 .posthog-referring-bar {
   height: 100%;
-  background: linear-gradient(90deg, #3682F5, #60a5fa);
+  background: linear-gradient(90deg, #16A34A, #4ade80);
   border-radius: 3px;
   transition: width 0.5s ease;
 }
@@ -739,7 +739,7 @@ body {
 
 .posthog-funnel-bar {
   height: 100%;
-  background: linear-gradient(90deg, #3682F5, #818cf8);
+  background: linear-gradient(90deg, #16A34A, #818cf8);
   border-radius: 6px;
   transition: width 0.6s ease;
   min-width: 2px;
@@ -770,7 +770,7 @@ body {
   border-radius: 50%;
   font-size: 0.65rem;
   font-weight: 700;
-  background: #3682F5;
+  background: #16A34A;
   color: white;
 }
 

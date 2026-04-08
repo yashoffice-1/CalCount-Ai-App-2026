@@ -67,9 +67,24 @@ export function AdvancedMonitoringPage() {
     if (!q) return logs
     return logs.filter((l) => `${l.id} ${l.source} ${l.message} ${l.level}`.toLowerCase().includes(q))
   }, [logs, search])
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen p-6 flex flex-col gap-4" suppressHydrationWarning>
+        <div className="h-10 w-48 bg-gray-200 animate-pulse rounded-lg" />
+        <div className="grid grid-cols-4 gap-4">
+           {[1,2,3,4].map(i => <div key={i} className="h-32 bg-gray-100 animate-pulse rounded-xl" />)}
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" suppressHydrationWarning>
       <PageHeading
         title="Advanced Monitoring"
         subtitle="Global server stats, live logs, and alert signals."

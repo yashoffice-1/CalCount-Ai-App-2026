@@ -15,6 +15,7 @@ import { formatCurrency, formatNumber } from '@/lib/format'
 export function DashboardPage() {
   const [kpis, setKpis] = React.useState(dashboardKpis)
   const [cpuPct, setCpuPct] = React.useState(61)
+  const [mounted, setMounted] = React.useState(false)
 
   React.useEffect(() => {
     const interval = window.setInterval(() => {
@@ -32,9 +33,17 @@ export function DashboardPage() {
     }, 12_000)
     return () => window.clearInterval(interval)
   }, [])
+  
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) {
+    return <div className="min-h-screen p-6" />
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" suppressHydrationWarning>
       <PageHeading
         title="Dashboard"
         subtitle="Operational overview for your SaaS tenants."
